@@ -1,0 +1,63 @@
+{
+  "name": "react-signal",
+  "version": "1.0.0",
+  "description": "Signals for react",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "dev": "jest --watchAll",
+    "prepack": "npm run prettier-format && npm run test && npm run build",
+    "build": "tsup ./src/index.ts",
+    "prettier-format": "prettier --config .prettierrc ./**/*.ts --write",
+    "test": "jest"
+  },
+  "keywords": [
+    "signal",
+    "signals",
+    "signaler",
+    "state",
+    "react-signal",
+    "state-manager",
+    "computed",
+    "effect",
+    "batch",
+    "untrack",
+    "useSignal",
+    "useEffect",
+    "typescript",
+    "react",
+    "lib",
+    "haraso",
+    "hapi"
+  ],
+  "author": "Peter Hragyil",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "*"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/react": "^18.3.5",
+    "jest": "^29.7.0",
+    "prettier": "^3.3.3",
+    "prettier-plugin-organize-imports": "^4.0.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4"
+  }
+}

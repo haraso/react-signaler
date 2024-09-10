@@ -1,0 +1,39 @@
+name: Node.js Package
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build_and_attach:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Set up Node.js environment
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Install dependencies
+      - run: npm ci
+
+      # Create package tarball
+      - run: npm pack
+        id: package
+
+      # Get the tarball file name
+      - name: Get package file name
+        id: get-package-name
+        run: echo "PACKAGE_FILE=$(ls *.tgz)" >> $GITHUB_ENV
+
+      # Upload the package to the release
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.PACKAGE_FILE }}
+          asset_name: ${{ env.PACKAGE_FILE }}
+          asset_content_type: application/gzip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
