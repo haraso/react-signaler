@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
-import { Signal, signal as createSignal } from './signal';
+import { signal as createSignal } from './signal';
+import { Signal } from './types';
 
 export function useSignal() {
   const signalsRef = useRef<Record<string, Signal>>({});

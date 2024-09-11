@@ -1,9 +1,8 @@
-import { ReadonlySignal } from './computed';
 import { createSignalCollector } from './createSignalCollector';
-import { Signal } from './signal';
+import { getProtected, Signals } from './types';
 
 export type Dispose = {
-  (...signals: (Signal | ReadonlySignal)[]): void;
+  (...signals: Signals[]): void;
   forceTrigger: () => void;
 };
 
@@ -13,7 +12,7 @@ export const getCurrentRunningEffectTrigger = () => runningEffect;
 function createEffect(
   isLazy: boolean,
   handler: () => void,
-  watch: (Signal | ReadonlySignal)[] = [],
+  watch: Signals[] = [],
 ): Dispose {
   const {
     signals: collectedSignals,
@@ -30,22 +29,22 @@ function createEffect(
     handler();
     disposeCollect();
     collectedSignals.forEach((s) => {
-      s._addEffect(trigger);
+      getProtected(s)._addEffect(trigger);
       oldSignals.delete(s);
     });
-    oldSignals.forEach((s) => s._removeEffect(trigger));
+    oldSignals.forEach((s) => getProtected(s)._removeEffect(trigger));
     runningEffect = null!;
   };
 
-  const dispose = (...signals: (Signal | ReadonlySignal)[]) => {
+  const dispose = (...signals: Signals[]) => {
     if (signals.length)
       return signals.forEach((s) => {
         collectedSignals.delete(s);
-        s._removeEffect(trigger);
+        getProtected(s)._removeEffect(trigger);
       });
 
     collectedSignals.forEach((s) => {
-      s._removeEffect(trigger);
+      getProtected(s)._removeEffect(trigger);
     });
     collectedSignals.clear();
   };
@@ -53,7 +52,7 @@ function createEffect(
 
   if (isLazy) {
     watch.forEach((s) => collectedSignals.add(s));
-    collectedSignals.forEach((s) => s._addEffect(trigger));
+    collectedSignals.forEach((s) => getProtected(s)._addEffect(trigger));
   } else {
     trigger();
   }
@@ -61,16 +60,10 @@ function createEffect(
   return dispose;
 }
 
-export function effect(
-  handler: () => void,
-  watch?: (Signal | ReadonlySignal)[],
-) {
+export function effect(handler: () => void, watch?: Signals[]) {
   return createEffect(false, handler, watch);
 }
 
-export function lazyEffect(
-  handler: () => void,
-  watch: (Signal | ReadonlySignal)[],
-) {
+export function lazyEffect(handler: () => void, watch: Signals[]) {
   return createEffect(true, handler, watch);
 }

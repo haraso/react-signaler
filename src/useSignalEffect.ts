@@ -1,16 +1,11 @@
 import { useCallback, useRef } from 'react';
-import { ReadonlySignal } from './computed';
 import { Dispose, effect as createEffect } from './effect';
-import { Signal } from './signal';
+import { Signals } from './types';
 
 export function useSignalEffect() {
   const disposesRef = useRef<Record<string, Dispose>>({});
   const effect = useCallback(
-    <T>(
-      uniqueEffectKey: string,
-      handler: () => T,
-      watch: (Signal | ReadonlySignal)[] = [],
-    ) => {
+    <T>(uniqueEffectKey: string, handler: () => T, watch: Signals[] = []) => {
       if (disposesRef.current[uniqueEffectKey])
         return disposesRef.current[uniqueEffectKey];
 

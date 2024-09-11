@@ -1,15 +1,11 @@
 import { useCallback, useRef } from 'react';
-import { ReadonlySignal, computed as createComputed } from './computed';
-import { Signal } from './signal';
+import { computed as createComputed } from './computed';
+import { ReadonlySignal, Signals } from './types';
 
 export function useComputed() {
   const signalsRef = useRef<Record<string, ReadonlySignal>>({});
   const computed = useCallback(
-    <T>(
-      uniqueComputedKey: string,
-      compute: () => T,
-      watch: (Signal | ReadonlySignal)[] = [],
-    ) => {
+    <T>(uniqueComputedKey: string, compute: () => T, watch: Signals[] = []) => {
       if (signalsRef.current[uniqueComputedKey])
         return signalsRef.current[uniqueComputedKey];
 

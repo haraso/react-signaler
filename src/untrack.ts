@@ -1,6 +1,4 @@
-import { ReadonlySignal } from './computed';
-import { isReadonlySignalOrSignal } from './isSignal';
-import { Signal } from './signal';
+import { isReadonlySignalOrSignal, ReadonlySignal, Signal } from './types';
 
 interface untrack {
   <R>(signal: Signal<R>): R;

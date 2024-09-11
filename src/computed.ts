@@ -3,35 +3,13 @@ import { createComponentNode } from './createComponentNode';
 import { addSignal, createSignalCollector } from './createSignalCollector';
 import { createValueManager } from './createValueManager';
 import { createWeakCollection } from './createWeakCollection';
-import { Signal } from './signal';
+import { getProtected, ReadonlySignal, setProtected, Signals } from './types';
 import { isUntrackEnabled, untrack } from './untrack';
-
-export type ReadonlySignal<Type = any> = {
-  (compute?: (value: Type) => ReactNode): ReactNode;
-  get(): Type;
-  get(select: <R = Type>(value: Type) => R): Type;
-  forceRecompute(): void;
-  forceNotifyEffects(): void;
-  _addEffect(trigger: () => void): void;
-  _removeEffect(trigger: () => void): void;
-  _addComputed(trigger: () => void): void;
-  _removeComputed(trigger: () => void): void;
-  _addTemporaryEffect(trigger: () => void): void;
-  _addComputedDirtySetter(setter: () => void): void;
-  _removeComputedDirtySetter(setter: () => void): void;
-  _creatorFunction: (
-    compute: () => Type,
-    watch?: Signal[],
-  ) => ReadonlySignal<Type>;
-};
 
 let runningComputed: () => void = null!;
 export const getCurrentRunningComputedTrigger = () => runningComputed;
 
-export function computed<Type>(
-  compute: () => Type,
-  watch: (Signal | ReadonlySignal)[] = [],
-) {
+export function computed<Type>(compute: () => Type, watch: Signals[] = []) {
   const versionSetters = createWeakCollection<() => void>();
   const computedTriggers = createWeakCollection<() => void>();
   const computedDirtySetters = createWeakCollection<() => void>();
@@ -74,29 +52,29 @@ export function computed<Type>(
     //add for next update
     signals.forEach((s) => {
       oldSignals.delete(s);
-      s._addComputed(update);
+      getProtected(s)._addComputed(update);
       computedTriggers.forEach((computedTrigger) => {
-        s._addComputed(computedTrigger);
+        getProtected(s)._addComputed(computedTrigger);
       });
 
-      s._addComputedDirtySetter(setDirty);
+      getProtected(s)._addComputedDirtySetter(setDirty);
       computedDirtySetters.forEach((setter) => {
-        s._addComputedDirtySetter(setter);
+        getProtected(s)._addComputedDirtySetter(setter);
       });
       if (hasChanges())
         effectTriggers.forEach((effectTrigger) => {
-          s._addTemporaryEffect(effectTrigger);
+          getProtected(s)._addTemporaryEffect(effectTrigger);
         });
     });
 
     oldSignals.forEach((s) => {
-      s._removeComputed(update);
+      getProtected(s)._removeComputed(update);
       computedTriggers.forEach((computedTrigger) => {
-        s._removeComputed(computedTrigger);
+        getProtected(s)._removeComputed(computedTrigger);
       });
-      s._removeComputedDirtySetter(setDirty);
+      getProtected(s)._removeComputedDirtySetter(setDirty);
       computedDirtySetters.forEach((setter) => {
-        s._removeComputedDirtySetter(setter);
+        getProtected(s)._removeComputedDirtySetter(setter);
       });
     });
 
@@ -145,49 +123,51 @@ export function computed<Type>(
     [...effectTriggers].forEach((trigger) => trigger());
   };
 
-  readonlySignal._addEffect = (trigger: () => void) => {
-    effectTriggers.add(trigger);
-  };
+  setProtected(readonlySignal, {
+    _addEffect(trigger: () => void) {
+      effectTriggers.add(trigger);
+    },
 
-  readonlySignal._removeEffect = (trigger: () => void) => {
-    effectTriggers.delete(trigger);
-  };
+    _removeEffect(trigger: () => void) {
+      effectTriggers.delete(trigger);
+    },
 
-  readonlySignal._addComputed = (trigger: () => void) => {
-    computedTriggers.add(trigger);
-    signals.forEach((s) => {
-      s._addComputed(trigger);
-    });
-  };
+    _addComputed(trigger: () => void) {
+      computedTriggers.add(trigger);
+      signals.forEach((s) => {
+        getProtected(s)._addComputed(trigger);
+      });
+    },
 
-  readonlySignal._removeComputed = (trigger: () => void) => {
-    computedTriggers.delete(trigger);
-    signals.forEach((s) => {
-      s._removeComputed(trigger);
-    });
-  };
-  readonlySignal._addComputedDirtySetter = (setter: () => void) => {
-    computedDirtySetters.add(setter);
-    signals.forEach((s) => {
-      s._addComputedDirtySetter(setter);
-    });
-  };
+    _removeComputed(trigger: () => void) {
+      computedTriggers.delete(trigger);
+      signals.forEach((s) => {
+        getProtected(s)._removeComputed(trigger);
+      });
+    },
+    _addComputedDirtySetter(setter: () => void) {
+      computedDirtySetters.add(setter);
+      signals.forEach((s) => {
+        getProtected(s)._addComputedDirtySetter(setter);
+      });
+    },
 
-  readonlySignal._removeComputedDirtySetter = (setter: () => void) => {
-    computedDirtySetters.delete(setter);
-    signals.forEach((s) => {
-      s._removeComputedDirtySetter(setter);
-    });
-  };
+    _removeComputedDirtySetter(setter: () => void) {
+      computedDirtySetters.delete(setter);
+      signals.forEach((s) => {
+        getProtected(s)._removeComputedDirtySetter(setter);
+      });
+    },
 
-  readonlySignal._addTemporaryEffect = (trigger: () => void) => {
-    temporaryEffectTriggers.add(trigger);
-    signals.forEach((s) => {
-      s._addTemporaryEffect(trigger);
-    });
-  };
+    _addTemporaryEffect(trigger: () => void) {
+      temporaryEffectTriggers.add(trigger);
+      signals.forEach((s) => {
+        getProtected(s)._addTemporaryEffect(trigger);
+      });
+    },
 
-  readonlySignal._creatorFunction = creatorFunction;
+    _creatorFunction: creatorFunction,
+  });
 
   update();
 

@@ -8,26 +8,8 @@ import { createWeakCollection } from './createWeakCollection';
 import { getCurrentRunningEffectTrigger } from './effect';
 import { lazyCall } from './lazyCall';
 import { LoopError, TooManyUntrackUpdatesError } from './SignalErrors';
+import { setProtected, Signal } from './types';
 import { isUntrackEnabled } from './untrack';
-
-export type Signal<Type = any> = {
-  (selector?: (value: Type) => ReactNode): ReactNode;
-  get(): Type;
-  get(getter: <R = Type>(value: Type) => R): Type;
-  set(value: Type): Type;
-  update(updater: (value: Type) => Type): Type;
-  mutate(mutator: (value: Type) => void): Type;
-  forceUpdate(): void;
-  forceNotifyEffects(): void;
-  _addEffect(trigger: () => void): void;
-  _removeEffect(trigger: () => void): void;
-  _addComputed(trigger: () => void): void;
-  _removeComputed(trigger: () => void): void;
-  _addTemporaryEffect(trigger: () => void): void;
-  _addComputedDirtySetter(setter: () => void): void;
-  _removeComputedDirtySetter(setter: () => void): void;
-  _creatorFunction: <Type>(value: Type) => Signal<Type>;
-};
 
 export function signal<Type>(value: Type) {
   const versionSetters = createWeakCollection<() => void>();
@@ -169,35 +151,37 @@ export function signal<Type>(value: Type) {
     [...effectTriggers].forEach((trigger) => trigger());
   };
 
-  signal._addEffect = (trigger: () => void) => {
-    effectTriggers.add(trigger);
-  };
+  setProtected(signal, {
+    _addEffect(trigger: () => void) {
+      effectTriggers.add(trigger);
+    },
 
-  signal._removeEffect = (trigger: () => void) => {
-    effectTriggers.delete(trigger);
-  };
+    _removeEffect(trigger: () => void) {
+      effectTriggers.delete(trigger);
+    },
 
-  signal._addComputed = (trigger: () => void) => {
-    computedTriggers.add(trigger);
-  };
+    _addComputed(trigger: () => void) {
+      computedTriggers.add(trigger);
+    },
 
-  signal._removeComputed = (trigger: () => void) => {
-    computedTriggers.delete(trigger);
-  };
+    _removeComputed(trigger: () => void) {
+      computedTriggers.delete(trigger);
+    },
 
-  signal._addTemporaryEffect = (trigger: () => void) => {
-    temporaryEffectTriggers.add(trigger);
-  };
+    _addTemporaryEffect(trigger: () => void) {
+      temporaryEffectTriggers.add(trigger);
+    },
 
-  signal._addComputedDirtySetter = (setter: () => void) => {
-    computedDirtySetters.add(setter);
-  };
+    _addComputedDirtySetter(setter: () => void) {
+      computedDirtySetters.add(setter);
+    },
 
-  signal._removeComputedDirtySetter = (setter: () => void) => {
-    computedDirtySetters.delete(setter);
-  };
+    _removeComputedDirtySetter(setter: () => void) {
+      computedDirtySetters.delete(setter);
+    },
 
-  signal._creatorFunction = creatorFunction;
+    _creatorFunction: creatorFunction,
+  });
 
   return signal;
 }
