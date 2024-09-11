@@ -1,4 +1,4 @@
-# react-signal
+# react-signaler
 
 ## Based on: https://github.com/tc39/proposal-signals
 
@@ -38,7 +38,7 @@
 Signal with atomic value
 
 ```tsx
-import { signal } from 'react-signal';
+import { signal } from 'react-signaler';
 
 const num = signal(5);
 
@@ -51,7 +51,7 @@ const Component: FC = () => {
 Signal with object value
 
 ```tsx
-import { signal } from 'react-signal';
+import { signal } from 'react-signaler';
 
 const num = signal({ num: 5 });
 
@@ -64,7 +64,7 @@ const Component: FC = () => {
 Get Signal value
 
 ```tsx
-import { signal } from 'react-signal';
+import { signal } from 'react-signaler';
 
 const num = signal({ num: 5 });
 console.log(num.get()); // { num: 5 }
@@ -75,7 +75,7 @@ console.log(num.get((value) => value.num)); // 5
 Set Signal value
 
 ```tsx
-import { signal } from 'react-signal';
+import { signal } from 'react-signaler';
 
 const num = signal({ num: 5 });
 num.set({ num: 10 }); // { num: 10 }
@@ -85,7 +85,7 @@ num.set({ num: 10 }); // { num: 10 }
 Update Signal value
 
 ```tsx
-import { signal } from 'react-signal';
+import { signal } from 'react-signaler';
 
 const num = signal({ num: 5 });
 num.update((value) => ({ ...value, num: 10 })); // { num: 10 }
@@ -95,7 +95,7 @@ num.update((value) => ({ ...value, num: 10 })); // { num: 10 }
 Mutate Signal value
 
 ```tsx
-import { signal } from 'react-signal';
+import { signal } from 'react-signaler';
 
 const num = signal({ num: 5 });
 num.mutate((value) => (value.num = 10)); // { num: 10 }
@@ -105,7 +105,7 @@ num.mutate((value) => (value.num = 10)); // { num: 10 }
 Use Signal value in react component
 
 ```tsx
-import { signal } from 'react-signal';
+import { signal } from 'react-signaler';
 
 const text = signal('');
 
@@ -125,7 +125,7 @@ const Component: FC = () => {
 **useSignal()** Create Signal in react component
 
 ```tsx
-import { useSignal } from 'react-signal';
+import { useSignal } from 'react-signaler';
 
 const Component: FC = () => {
   const { signal } = useSignal();
@@ -147,7 +147,7 @@ const Component: FC = () => {
 Create Computed
 
 ```tsx
-import { signal, computed } from 'react-signal';
+import { signal, computed } from 'react-signaler';
 
 const name = signal('Peter');
 const upperCaseName = computed(() => name.get().toUpperCase());
@@ -161,7 +161,7 @@ const Component: FC = () => {
 Create Computed object value
 
 ```tsx
-import { signal, computed } from 'react-signal';
+import { signal, computed } from 'react-signaler';
 
 const name = signal('Peter');
 const transformedName = computed(() => ({
@@ -178,7 +178,7 @@ const Component: FC = () => {
 Read Computed value
 
 ```tsx
-import { signal, computed } from 'react-signal';
+import { signal, computed } from 'react-signaler';
 
 const name = signal('Peter');
 const transformedName = computed(() => ({
@@ -194,7 +194,7 @@ console.log(transformedName.get((value) => value.upperCase)); // PETER
 **useComputed()** Create Computed in react component
 
 ```tsx
-import { useSignal, useComputed } from 'react-signal';
+import { useSignal, useComputed } from 'react-signaler';
 
 const Component: FC = () => {
   const { signal } = useSignal();
@@ -223,7 +223,7 @@ const Component: FC = () => {
 Crate effect
 
 ```tsx
-import { signal, effect } from 'react-signal';
+import { signal, effect } from 'react-signaler';
 
 const name = signal('Peter');
 
@@ -249,7 +249,7 @@ Dispose effect
 **useSignalEffect()** Create Effect in react component
 
 ```tsx
-import { useSignal, useComputed, useSignalEffect } from 'react-signal';
+import { useSignal, useComputed, useSignalEffect } from 'react-signaler';
 
 const Component: FC = () => {
   const { signal } = useSignal();
@@ -283,7 +283,7 @@ const Component: FC = () => {
 Create Lazy Effect
 
 ```tsx
-import { signal, lazyEffect } from 'react-signal';
+import { signal, lazyEffect } from 'react-signaler';
 
 const name = signal('Peter');
 
@@ -300,7 +300,7 @@ name.set('Erik');
 Create Lazy Effect inside react component
 
 ```tsx
-import { useSignal, useComputed, useSignalLazyEffect } from 'react-signal';
+import { useSignal, useComputed, useSignalLazyEffect } from 'react-signaler';
 
 const Component: FC = () => {
   const { signal } = useSignal();
@@ -334,7 +334,7 @@ batch\<R\>(cb: () => R): R
 > Batch can avoid unnecessary update steps.
 
 ```jsx
-import { signal, effect, batch } from 'react-signal';
+import { signal, effect, batch } from 'react-signaler';
 
 const count = signal(0);
 
@@ -367,7 +367,7 @@ untrack\<R\>(signal: Signal\<R\>): R<br/>untrack\<R\>(signal: ReadonlySignal\<R\
 > Untrack can avoid any subscribes.
 
 ```jsx
-import { signal, effect } from 'react-signal';
+import { signal, effect } from 'react-signaler';
 import { thisFunctionReadOtherSignals } from 'somewhere';
 
 const name = signal('');
