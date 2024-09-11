@@ -389,3 +389,4 @@ name.set('Peter');
 - [WeakRef](https://caniuse.com/mdn-javascript_builtins_weakref) - [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef)
 - [Set](https://caniuse.com/mdn-javascript_builtins_set_set) - [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/Set)
 - [Spread syntax (...)](https://caniuse.com/mdn-javascript_operators_spread) - [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
+- [Symbol](https://caniuse.com/mdn-javascript_builtins_symbol) - [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol)

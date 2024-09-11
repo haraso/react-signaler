@@ -41,7 +41,6 @@ export function computed<Type>(compute: () => Type, watch: Signals[] = []) {
     const oldSignals = new Set(signals.toArray());
     signals.clear();
 
-    //update
     cloneValue(currentValue);
     collectSignals(watch);
     currentValue = compute();
@@ -49,7 +48,6 @@ export function computed<Type>(compute: () => Type, watch: Signals[] = []) {
     cloneValue(currentValue);
     isDirty = false;
 
-    //add for next update
     signals.forEach((s) => {
       oldSignals.delete(s);
       getProtected(s)._addComputed(update);

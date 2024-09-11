@@ -14,13 +14,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          registry-url: https://registry.npmjs.org/
 
       # Install dependencies
-      - run: npm ci
+      - name: Install dependencies
+        id: install
+        run: npm ci
+
+      # Run tests
+      - name: Run tests
+        id: test
+        run: npm test
+
+      # Build
+      - name: Build
+        id: build
+        run: npm run build
 
       # Create package tarball
-      - run: npm pack
-        id: package
+      - name: Pack
+        id: pack
+        run: npm pack
 
       # Get the tarball file name
       - name: Get package file name
@@ -37,3 +51,8 @@ jobs:
           asset_content_type: application/gzip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

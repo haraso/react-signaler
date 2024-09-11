@@ -2,6 +2,9 @@
   "name": "react-signal",
   "version": "1.0.0",
   "description": "Signals for react",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist",
     "LICENSE",
@@ -20,7 +23,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "jest --watchAll",
-    "prepack": "npm run prettier-format && npm run test && npm run build",
+    "local-pack": "npm run prettier-format && npm run test && npm run build && npm pack",
     "build": "tsup ./src/index.ts",
     "prettier-format": "prettier --config .prettierrc ./**/*.ts --write",
     "test": "jest"
