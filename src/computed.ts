@@ -23,6 +23,11 @@ export function computed<Type>(compute: () => Type, watch: Signals[] = []) {
   let isDirty = false;
   let currentValue = null as Type;
 
+  const defaultNodeProps: Parameters<typeof createComponentNode>[0] = {
+    versionSetters,
+    selector: () => currentValue as ReactNode,
+  };
+
   const setDirty = () => {
     isDirty = true;
   };
@@ -94,12 +99,7 @@ export function computed<Type>(compute: () => Type, watch: Signals[] = []) {
   };
 
   const readonlySignal = ((selector?: (value: Type) => ReactNode) => {
-    if (!selector)
-      return createComponentNode({
-        versionSetters,
-        selector: () => currentValue as ReactNode,
-      });
-
+    if (!selector) return createComponentNode(defaultNodeProps);
     return createComponentNode({
       versionSetters,
       selector: () => selector(currentValue),

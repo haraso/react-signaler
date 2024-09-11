@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Dispose, lazyEffect as createLazyEffect } from './effect';
 import { Signals } from './types';
 
@@ -26,6 +26,12 @@ export function useSignalLazyEffect() {
     (uniqueEffectKey: string): Dispose | undefined => {
       return disposesRef.current[uniqueEffectKey];
     },
+    [],
+  );
+
+  useEffect(
+    () => () =>
+      Object.values(disposesRef.current).forEach((dispose) => dispose()),
     [],
   );
 

@@ -16,7 +16,8 @@ export interface SignalsProtectedPart {
 const protectedKey = Symbol('protected');
 
 export type Signal<Type = any> = {
-  (selector?: (value: Type) => ReactNode): ReactNode;
+  (): ReactNode;
+  (selector: (value: Type) => ReactNode): ReactNode;
   get(): Type;
   get(getter: <R = Type>(value: Type) => R): Type;
   set(value: Type): Type;
@@ -28,7 +29,8 @@ export type Signal<Type = any> = {
 };
 
 export type ReadonlySignal<Type = any> = {
-  (compute?: (value: Type) => ReactNode): ReactNode;
+  (): ReactNode;
+  (selector: (value: Type) => ReactNode): ReactNode;
   get(): Type;
   get(select: <R = Type>(value: Type) => R): Type;
   forceRecompute(): void;

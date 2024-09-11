@@ -22,13 +22,13 @@ export function signal<Type>(value: Type) {
 
   let currentValue = value;
 
-  const signal = ((selector?: (value: Type) => ReactNode) => {
-    if (!selector)
-      return createComponentNode({
-        versionSetters,
-        selector: () => currentValue as ReactNode,
-      });
+  const defaultNodeProps: Parameters<typeof createComponentNode>[0] = {
+    versionSetters,
+    selector: () => currentValue as ReactNode,
+  };
 
+  const signal = ((selector?: (value: Type) => ReactNode) => {
+    if (!selector) return createComponentNode(defaultNodeProps);
     return createComponentNode({
       versionSetters,
       selector: () => selector(currentValue),
