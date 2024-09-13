@@ -1,183 +1,140 @@
 import { ReactNode } from 'react';
 import { addBatch, isBatching } from './batch';
-import { getCurrentRunningComputedTrigger } from './computed';
 import { createComponentNode } from './createComponentNode';
 import { addSignal } from './createSignalCollector';
 import { createValueManager } from './createValueManager';
 import { createWeakCollection } from './createWeakCollection';
-import { getCurrentRunningEffectTrigger } from './effect';
 import { lazyCall } from './lazyCall';
-import { LoopError, TooManyUntrackUpdatesError } from './SignalErrors';
-import { setProtected, Signal } from './types';
+import { loopCheck, tooManyUntrackedUpdateCheck } from './SignalErrors';
+import { setProtected, Signal, SignalState } from './types';
 import { isUntrackEnabled } from './untrack';
 
-export function signal<Type>(value: Type) {
-  const versionSetters = createWeakCollection<() => void>();
-  const computedTriggers = createWeakCollection<() => void>();
-  const computedDirtySetters = createWeakCollection<() => void>();
-  const effectTriggers = new Set<() => void>();
-  const temporaryEffectTriggers = createWeakCollection<() => void>();
-  let updateCount = 0;
-  let lastUpdateTimestamp = Date.now();
+function update<Type>(newValue: Type, state: SignalState<Type>) {
+  state.currentValue = newValue;
+  state.temporaryEffectTriggers.clear();
+  state.computedTriggers.toArray().forEach((trigger) => trigger());
+  new Set([
+    ...state.effectTriggers,
+    ...state.temporaryEffectTriggers.toArray(),
+  ]).forEach((trigger) => trigger());
+  state.temporaryEffectTriggers.clear();
 
-  let currentValue = value;
+  state.versionSetters.toArray().forEach((trigger) => trigger());
+}
+
+export function signal<Type>(value: Type) {
+  const state: SignalState<Type> = {
+    versionSetters: createWeakCollection<() => void>(),
+    computedTriggers: createWeakCollection<() => void>(),
+    computedDirtySetters: createWeakCollection<() => void>(),
+    effectTriggers: new Set<() => void>(),
+    temporaryEffectTriggers: createWeakCollection<() => void>(),
+    updateCount: 0,
+    lastUpdateTimestamp: Date.now(),
+    currentValue: value,
+  };
 
   const defaultNodeProps: Parameters<typeof createComponentNode>[0] = {
-    versionSetters,
-    selector: () => currentValue as ReactNode,
+    state,
+    selector: () => state.currentValue as ReactNode,
   };
 
   const signal = ((selector?: (value: Type) => ReactNode) => {
-    if (!selector) return createComponentNode(defaultNodeProps);
-    return createComponentNode({
-      versionSetters,
-      selector: () => selector(currentValue),
-    });
+    if (selector)
+      return createComponentNode({
+        state,
+        selector: () => selector(state.currentValue),
+      });
+    return createComponentNode(defaultNodeProps, true);
   }) as Signal<Type>;
-
-  const update = (newValue: Type) => {
-    currentValue = newValue;
-    temporaryEffectTriggers.clear();
-    computedTriggers.toArray().forEach((trigger) => trigger());
-    new Set([...effectTriggers, ...temporaryEffectTriggers.toArray()]).forEach(
-      (trigger) => trigger(),
-    );
-    temporaryEffectTriggers.clear();
-
-    versionSetters.toArray().forEach((trigger) => trigger());
-  };
-
-  const loopCheck = () => {
-    const currentEffectTrigger = getCurrentRunningEffectTrigger();
-    const currentComputedTrigger = getCurrentRunningComputedTrigger();
-    if (
-      effectTriggers.has(currentEffectTrigger) ||
-      temporaryEffectTriggers.has(currentEffectTrigger) ||
-      computedTriggers.has(currentComputedTrigger)
-    )
-      throw new LoopError();
-  };
-
-  const untrackedUpdateCheck = () => {
-    if (!isUntrackEnabled()) return;
-    const currentUpdateTimestamp = Date.now();
-    const delay = currentUpdateTimestamp - lastUpdateTimestamp;
-    if (delay > 1000) {
-      updateCount = 0;
-      lastUpdateTimestamp = currentUpdateTimestamp;
-    }
-    if (
-      ++updateCount > TooManyUntrackUpdatesError.MAX_UNTRACK_UPDATES_PER_SEC
-    ) {
-      throw new TooManyUntrackUpdatesError();
-    }
-  };
 
   signal.get = (getter?: <R = Type>(value: Type) => R) => {
     if (!isUntrackEnabled()) addSignal(signal);
-    if (getter) return getter(currentValue);
-    return currentValue;
+    if (getter) return getter(state.currentValue);
+    return state.currentValue;
   };
 
   signal.set = (value: Type) => {
     if (!isUntrackEnabled()) addSignal(signal);
-    loopCheck();
-    if (value === currentValue) return currentValue;
-    currentValue = value;
-    computedDirtySetters.toArray().forEach((setter) => setter());
-    untrackedUpdateCheck();
+    loopCheck(state);
+    if (value === state.currentValue) return state.currentValue;
+    state.currentValue = value;
+    state.computedDirtySetters.toArray().forEach((setter) => setter());
+    tooManyUntrackedUpdateCheck(state);
 
-    if (isBatching())
-      addBatch({
-        computedTriggers,
-        effectTriggers,
-        temporaryEffectTriggers,
-        versionSetters,
-      });
-    else lazyCall(() => update(value));
+    if (isBatching()) addBatch(state);
+    else lazyCall(() => update(value, state));
 
-    return currentValue;
+    return state.currentValue;
   };
 
   signal.update = (setter: (value: Type) => Type) => {
     if (!isUntrackEnabled()) addSignal(signal);
-    loopCheck();
-    const newValue = setter(currentValue);
-    if (newValue === currentValue) return currentValue;
-    currentValue = newValue;
-    computedDirtySetters.toArray().forEach((setter) => setter());
-    untrackedUpdateCheck();
+    loopCheck(state);
+    const newValue = setter(state.currentValue);
+    if (newValue === state.currentValue) return state.currentValue;
+    state.currentValue = newValue;
+    state.computedDirtySetters.toArray().forEach((setter) => setter());
+    tooManyUntrackedUpdateCheck(state);
 
-    if (isBatching())
-      addBatch({
-        computedTriggers,
-        effectTriggers,
-        temporaryEffectTriggers,
-        versionSetters,
-      });
-    else lazyCall(() => update(newValue));
+    if (isBatching()) addBatch(state);
+    else lazyCall(() => update(newValue, state));
 
-    return currentValue;
+    return state.currentValue;
   };
 
   signal.mutate = (mutator: (value: Type) => void) => {
     const { cloneValue, hasChanges, changes } = createValueManager<Type>();
     if (!isUntrackEnabled()) addSignal(signal);
-    loopCheck();
-    cloneValue(currentValue);
-    mutator(currentValue);
-    cloneValue(currentValue);
-    if (!hasChanges()) return currentValue;
-    computedDirtySetters.toArray().forEach((setter) => setter());
-    untrackedUpdateCheck();
+    loopCheck(state);
+    cloneValue(state.currentValue);
+    mutator(state.currentValue);
+    cloneValue(state.currentValue);
+    if (!hasChanges()) return state.currentValue;
+    state.computedDirtySetters.toArray().forEach((setter) => setter());
+    tooManyUntrackedUpdateCheck(state);
 
-    if (isBatching())
-      addBatch({
-        computedTriggers,
-        effectTriggers,
-        temporaryEffectTriggers,
-        versionSetters,
-      });
-    else lazyCall(() => update(changes().at(0)!.newValue));
+    if (isBatching()) addBatch(state);
+    else lazyCall(() => update(changes().at(0)!.newValue, state));
 
-    return currentValue;
+    return state.currentValue;
   };
 
   signal.forceUpdate = () => {
-    update(currentValue);
+    update(state.currentValue, state);
   };
 
   signal.forceNotifyEffects = () => {
-    [...effectTriggers].forEach((trigger) => trigger());
+    [...state.effectTriggers].forEach((trigger) => trigger());
   };
 
   setProtected(signal, {
     _addEffect(trigger: () => void) {
-      effectTriggers.add(trigger);
+      state.effectTriggers.add(trigger);
     },
 
     _removeEffect(trigger: () => void) {
-      effectTriggers.delete(trigger);
+      state.effectTriggers.delete(trigger);
     },
 
     _addComputed(trigger: () => void) {
-      computedTriggers.add(trigger);
+      state.computedTriggers.add(trigger);
     },
 
     _removeComputed(trigger: () => void) {
-      computedTriggers.delete(trigger);
+      state.computedTriggers.delete(trigger);
     },
 
     _addTemporaryEffect(trigger: () => void) {
-      temporaryEffectTriggers.add(trigger);
+      state.temporaryEffectTriggers.add(trigger);
     },
 
     _addComputedDirtySetter(setter: () => void) {
-      computedDirtySetters.add(setter);
+      state.computedDirtySetters.add(setter);
     },
 
     _removeComputedDirtySetter(setter: () => void) {
-      computedDirtySetters.delete(setter);
+      state.computedDirtySetters.delete(setter);
     },
 
     _creatorFunction: creatorFunction,

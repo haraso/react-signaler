@@ -1,6 +1,6 @@
 {
   "name": "react-signaler",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Signals for react",
   "publishConfig": {
     "access": "public"

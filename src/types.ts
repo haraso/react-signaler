@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { computed } from './computed';
+import { WeakCollection } from './createWeakCollection';
 import { signal } from './signal';
 
 export interface SignalsProtectedPart {
@@ -28,6 +29,20 @@ export type Signal<Type = any> = {
   [protectedKey]: SignalsProtectedPart;
 };
 
+export interface SignalStateBase<Type = any> {
+  versionSetters: WeakCollection<() => void>;
+  computedTriggers: WeakCollection<() => void>;
+  computedDirtySetters: WeakCollection<() => void>;
+  effectTriggers: Set<() => void>;
+  temporaryEffectTriggers: WeakCollection<() => void>;
+  currentValue: Type;
+}
+
+export interface SignalState<Type = any> extends SignalStateBase<Type> {
+  updateCount: number;
+  lastUpdateTimestamp: number;
+}
+
 export type ReadonlySignal<Type = any> = {
   (): ReactNode;
   (selector: (value: Type) => ReactNode): ReactNode;
@@ -37,6 +52,10 @@ export type ReadonlySignal<Type = any> = {
   forceNotifyEffects(): void;
   [protectedKey]: SignalsProtectedPart;
 };
+
+export interface ReadonlySignalState<Type = any> extends SignalStateBase<Type> {
+  isDirty: boolean;
+}
 
 export type Signals = Signal | ReadonlySignal;
 

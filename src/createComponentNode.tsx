@@ -1,29 +1,48 @@
 import { FC, ReactNode, useEffect, useState } from 'react';
-import { WeakCollection } from './createWeakCollection';
+import { SignalStateBase } from './types';
 
 const MAX_COUNTED_VERSIONS = 1000;
 
-const Component: FC<{
-  versionSetters: WeakCollection<() => void>;
+const SignalValueNode: FC<{
+  state: SignalStateBase;
   selector: () => ReactNode;
-}> = ({ selector, versionSetters }) => {
+}> = ({ selector, state }) => {
   const [_, setter] = useState(0);
   useEffect(() => {
     const handler = () => setter((v) => (v + 1) % MAX_COUNTED_VERSIONS);
-    versionSetters.add(handler);
+    state.versionSetters.add(handler);
     return () => {
-      versionSetters.delete(handler);
+      state.versionSetters.delete(handler);
     };
   }, []);
   return selector();
 };
 
-export function createComponentNode({
-  versionSetters,
-  selector,
-}: {
-  versionSetters: WeakCollection<() => void>;
+const SignalComponentNode: FC<{
+  state: SignalStateBase;
   selector: () => ReactNode;
-}) {
-  return <Component versionSetters={versionSetters} selector={selector} />;
+}> = ({ selector, state }) => {
+  const [_, setter] = useState(0);
+  useEffect(() => {
+    const handler = () => setter((v) => (v + 1) % MAX_COUNTED_VERSIONS);
+    state.versionSetters.add(handler);
+    return () => {
+      state.versionSetters.delete(handler);
+    };
+  }, []);
+  return selector();
+};
+
+export function createComponentNode(
+  {
+    state,
+    selector,
+  }: {
+    state: SignalStateBase;
+    selector: () => ReactNode;
+  },
+  isDefault?: boolean,
+) {
+  if (isDefault) return <SignalValueNode state={state} selector={selector} />;
+  else return <SignalComponentNode state={state} selector={selector} />;
 }

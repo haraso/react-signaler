@@ -1,66 +1,58 @@
 import { WeakCollection } from './createWeakCollection';
 import { lazyCall } from './lazyCall';
+import { SignalStateBase } from './types';
 
 const batchVersionSetters: Set<WeakCollection<() => void>> = new Set();
 const batchComputedTriggers: Set<WeakCollection<() => void>> = new Set();
 const batchEffectTriggers: Set<Set<() => void>> = new Set();
 const batchTemporaryEffectTriggers: Set<WeakCollection<() => void>> = new Set();
 
-export function addBatch({
-  computedTriggers,
-  effectTriggers,
-  temporaryEffectTriggers,
-  versionSetters,
-}: {
-  versionSetters: WeakCollection<() => void>;
-  computedTriggers: WeakCollection<() => void>;
-  effectTriggers: Set<() => void>;
-  temporaryEffectTriggers: WeakCollection<() => void>;
-}) {
-  batchVersionSetters.add(versionSetters);
-  batchComputedTriggers.add(computedTriggers);
-  batchEffectTriggers.add(effectTriggers);
-  batchTemporaryEffectTriggers.add(temporaryEffectTriggers);
+export function addBatch(state: SignalStateBase) {
+  batchVersionSetters.add(state.versionSetters);
+  batchComputedTriggers.add(state.computedTriggers);
+  batchEffectTriggers.add(state.effectTriggers);
+  batchTemporaryEffectTriggers.add(state.temporaryEffectTriggers);
 }
 
 let _isBatching = false;
 export const isBatching = () => _isBatching;
+
+function merge(set: Set<WeakCollection<() => void> | Set<() => void>>) {
+  const result = new Set<() => void>();
+  set.forEach((collection) => {
+    collection.forEach((trigger) => result.add(trigger));
+  });
+  return result;
+}
 
 export function batch<R>(cb: () => R): R {
   _isBatching = true;
   const result = cb();
   _isBatching = false;
 
-  const merge = (set: Set<WeakCollection<() => void> | Set<() => void>>) => {
-    const result = new Set<() => void>();
-    set.forEach((collection) => {
-      collection.forEach((trigger) => result.add(trigger));
-    });
-    return result;
-  };
-
   lazyCall(() => {
     batchTemporaryEffectTriggers.forEach((temporaryEffectTriggers) => {
       temporaryEffectTriggers.clear();
     });
 
-    const computedTriggers = merge(batchComputedTriggers);
+    const mergedComputedTriggers = merge(batchComputedTriggers);
     batchComputedTriggers.clear();
-    computedTriggers.forEach((trigger) => trigger());
+    mergedComputedTriggers.forEach((trigger) => trigger());
 
-    const effectTriggers = new Set([
+    const mergedEffectTriggers = new Set([
       ...merge(batchEffectTriggers),
       ...merge(batchTemporaryEffectTriggers),
     ]);
     batchEffectTriggers.clear();
-    effectTriggers.forEach((trigger) => trigger());
+    mergedEffectTriggers.forEach((trigger) => trigger());
 
     batchTemporaryEffectTriggers.forEach((temporaryEffectTriggers) => {
       temporaryEffectTriggers.clear();
     });
     batchTemporaryEffectTriggers.clear();
 
-    merge(batchVersionSetters).forEach((trigger) => trigger());
+    const mergedVersionSetters = merge(batchVersionSetters);
+    mergedVersionSetters.forEach((trigger) => trigger());
     batchVersionSetters.clear();
   });
   return result;
