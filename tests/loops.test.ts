@@ -5,9 +5,9 @@ import {
 import {
   computed,
   effect,
+  LoopError,
   signal,
-  SignalLoopError,
-  SignalTooManyUntrackUpdatesError,
+  TooManyUntrackUpdatesError,
   untrack,
 } from '../src';
 
@@ -31,7 +31,7 @@ describe('-------------------- Loop tests --------------------\n', () => {
 
     const { added, maxInQueue } = await stopRequestAnimationFrame();
 
-    expect(err).toEqual(new SignalLoopError());
+    expect(err).toEqual(new LoopError());
 
     expect(trigger).toHaveBeenCalledTimes(2);
     expect(added).toBe(1);
@@ -56,7 +56,7 @@ describe('-------------------- Loop tests --------------------\n', () => {
 
     const { added, maxInQueue } = await stopRequestAnimationFrame();
 
-    expect(c.get()).toEqual(new SignalLoopError());
+    expect(c.get()).toEqual(new LoopError());
     expect(trigger).toHaveBeenCalledTimes(2);
 
     expect(added).toBe(1);
@@ -122,7 +122,7 @@ describe('-------------------- Loop tests --------------------\n', () => {
 
     const { added, maxInQueue } = await stopRequestAnimationFrame();
 
-    expect(c.get()).toEqual(new SignalLoopError());
+    expect(c.get()).toEqual(new LoopError());
     expect(trigger).toHaveBeenCalledTimes(3);
 
     expect(added).toBe(2);
@@ -149,7 +149,7 @@ describe('-------------------- Loop tests --------------------\n', () => {
 
     const { added, maxInQueue } = await stopRequestAnimationFrame();
 
-    expect(c.get()).toEqual(new SignalLoopError());
+    expect(c.get()).toEqual(new LoopError());
     expect(trigger).toHaveBeenCalledTimes(2);
 
     expect(added).toBe(2);
@@ -178,7 +178,7 @@ describe('-------------------- Loop tests --------------------\n', () => {
 
     await stopRequestAnimationFrame();
 
-    expect(c2.get()).toEqual(new SignalLoopError());
+    expect(c2.get()).toEqual(new LoopError());
   }, 1000);
 
   test('set s1 -> c1 -> untrack(set s2) -> c2 -> untrack(set s1) -> c1 -> untrack(set s2) <- loop', async () => {
@@ -207,7 +207,7 @@ describe('-------------------- Loop tests --------------------\n', () => {
 
     await stopRequestAnimationFrame();
 
-    expect(c1.get()).toEqual(new SignalTooManyUntrackUpdatesError());
-    expect(c2.get()).toEqual(new SignalTooManyUntrackUpdatesError());
+    expect(c1.get()).toEqual(new TooManyUntrackUpdatesError());
+    expect(c2.get()).toEqual(new TooManyUntrackUpdatesError());
   }, 1000);
 });

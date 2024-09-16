@@ -2,10 +2,7 @@ export { batch } from './batch';
 export { computed } from './computed';
 export { Dispose, effect, lazyEffect } from './effect';
 export { signal } from './signal';
-export {
-  LoopError as SignalLoopError,
-  TooManyUntrackUpdatesError as SignalTooManyUntrackUpdatesError,
-} from './SignalErrors';
+export { LoopError, TooManyUntrackUpdatesError } from './SignalErrors';
 export {
   ReadonlySignal,
   Signal,
