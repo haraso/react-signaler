@@ -9,6 +9,7 @@
 - [signal\<Type\>(value: Type): Signal\<Type\>](#signal)
   - [Signal with atomic value](#signal-atomic-value)
   - [Signal with object value](#signal-object-value)
+  - [List of signal](#signal-list)
   - [Get Signal value](#signal-get-value)
   - [Set Signal value](#signal-set-value)
   - [Update Signal value](#signal-update-value)
@@ -17,6 +18,7 @@
   - [useSignal() Create Signal in react component](#signal-inside-component)
 - [computed\<Type\>(compute: ()=>Type, watch?: (Signal | ReadonlySignal)[]): ReadonlySignal\<Type\>](#computed)
   - [Create Computed](#computed-create)
+  - [List of computed](#computed-list)
   - [Create Computed object value](#computed-create-object-value)
   - [useComputed() Create Computed in react component](#computed-inside-component)
 - [effect(handler: ()=>void, watch?: (Signal | ReadonlySignal)[]): Dispose](#effect)
@@ -57,6 +59,31 @@ const num = signal({ num: 5 });
 
 const Component: FC = () => {
   return <h1>Num: {num((value) => value.num)}</h1>;
+};
+```
+
+<a id="signal-list"></a>
+List of signal
+
+```tsx
+import { listOfSignal } from './list-of-signal';
+
+const Component: FC = () => {
+  return <div>{listOfSignal.map((signal, idxAsKey) => signal(idxAsKey))}</div>;
+};
+```
+
+```tsx
+import { listOfSignal } from './list-of-signal';
+
+const Component: FC = () => {
+  return (
+    <ul>
+      {listOfSignal.map((signal, idxAsKey) =>
+        signal((value) => <li>{value}</li>, idxAsKey),
+      )}
+    </ul>
+  );
 };
 ```
 
@@ -154,6 +181,33 @@ const upperCaseName = computed(() => name.get().toUpperCase());
 
 const Component: FC = () => {
   return <h1>name: {upperCaseName()}</h1>;
+};
+```
+
+<a id="computed-list"></a>
+List of computed
+
+```tsx
+import { listOfComputed } from './list-of-computed';
+
+const Component: FC = () => {
+  return (
+    <div>{listOfComputed.map((computed, idxAsKey) => computed(idxAsKey))}</div>
+  );
+};
+```
+
+```tsx
+import { listOfComputed } from './list-of-computed';
+
+const Component: FC = () => {
+  return (
+    <ul>
+      {listOfComputed.map((computed, idxAsKey) =>
+        computed((value) => <li>{value}</li>, idxAsKey),
+      )}
+    </ul>
+  );
 };
 ```
 

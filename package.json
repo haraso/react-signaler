@@ -1,13 +1,13 @@
 {
   "name": "react-signaler",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Signals for react",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/haraso/react-signal.git"
+    "url": "https://github.com/haraso/react-signaler.git"
   },
   "files": [
     "dist",

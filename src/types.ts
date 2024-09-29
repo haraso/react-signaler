@@ -18,7 +18,9 @@ const protectedKey = Symbol('protected');
 
 export type Signal<Type = any> = {
   (): ReactNode;
+  (key: string | number): ReactNode;
   (selector: (value: Type) => ReactNode): ReactNode;
+  (selector: (value: Type) => ReactNode, key: string | number): ReactNode;
   get(): Type;
   get(getter: <R = Type>(value: Type) => R): Type;
   set(value: Type): Type;
@@ -45,7 +47,9 @@ export interface SignalState<Type = any> extends SignalStateBase<Type> {
 
 export type ReadonlySignal<Type = any> = {
   (): ReactNode;
+  (key: string | number): ReactNode;
   (selector: (value: Type) => ReactNode): ReactNode;
+  (selector: (value: Type) => ReactNode, key: string | number): ReactNode;
   get(): Type;
   get(select: <R = Type>(value: Type) => R): Type;
   forceRecompute(): void;

@@ -22,7 +22,7 @@ function update<Type>(newValue: Type, state: SignalState<Type>) {
   state.versionSetters.toArray().forEach((trigger) => trigger());
 }
 
-export function signal<Type>(value: Type) {
+export function signal<Type>(value: Type): Signal<Type> {
   const state: SignalState<Type> = {
     versionSetters: createWeakCollection<() => void>(),
     computedTriggers: createWeakCollection<() => void>(),
@@ -39,12 +39,25 @@ export function signal<Type>(value: Type) {
     selector: () => state.currentValue as ReactNode,
   };
 
-  const signal = ((selector?: (value: Type) => ReactNode) => {
-    if (selector)
+  const signal = ((
+    selector?: ((value: Type) => ReactNode) | string | number,
+    key?: string | number,
+  ) => {
+    if (typeof selector === 'function')
       return createComponentNode({
         state,
         selector: () => selector(state.currentValue),
+        key,
       });
+    else if (typeof selector !== 'undefined') {
+      return createComponentNode(
+        {
+          ...defaultNodeProps,
+          key: selector,
+        },
+        true,
+      );
+    }
     return createComponentNode(defaultNodeProps, true);
   }) as Signal<Type>;
 

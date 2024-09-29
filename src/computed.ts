@@ -15,7 +15,10 @@ import { isUntrackEnabled, untrack } from './untrack';
 let runningComputed: () => void = null!;
 export const getCurrentRunningComputedTrigger = () => runningComputed;
 
-export function computed<Type>(compute: () => Type, watch: Signals[] = []) {
+export function computed<Type>(
+  compute: () => Type,
+  watch: Signals[] = [],
+): ReadonlySignal<Type> {
   const state: ReadonlySignalState<Type> = {
     versionSetters: createWeakCollection<() => void>(),
     computedTriggers: createWeakCollection<() => void>(),
@@ -109,12 +112,24 @@ export function computed<Type>(compute: () => Type, watch: Signals[] = []) {
     runningComputed = null!;
   };
 
-  const readonlySignal = ((selector?: (value: Type) => ReactNode) => {
-    if (selector)
+  const readonlySignal = ((
+    selector?: ((value: Type) => ReactNode) | string | number,
+    key?: string | number,
+  ) => {
+    if (typeof selector === 'function')
       return createComponentNode({
         state,
         selector: () => selector(state.currentValue),
+        key,
       });
+    else if (typeof selector !== 'undefined')
+      return createComponentNode(
+        {
+          ...defaultNodeProps,
+          key: selector,
+        },
+        true,
+      );
     return createComponentNode(defaultNodeProps, true);
   }) as ReadonlySignal<Type>;
 

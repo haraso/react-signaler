@@ -37,12 +37,16 @@ export function createComponentNode(
   {
     state,
     selector,
+    key,
   }: {
     state: SignalStateBase;
     selector: () => ReactNode;
+    key?: string | number;
   },
-  isDefault?: boolean,
+  isValueNode?: boolean,
 ) {
-  if (isDefault) return <SignalValueNode state={state} selector={selector} />;
-  else return <SignalComponentNode state={state} selector={selector} />;
+  if (isValueNode)
+    return <SignalValueNode key={key} state={state} selector={selector} />;
+  else
+    return <SignalComponentNode key={key} state={state} selector={selector} />;
 }
