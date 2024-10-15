@@ -427,7 +427,7 @@ import { thisFunctionReadOtherSignals } from 'somewhere';
 const name = signal('');
 
 const dispose = effect(() => {
-  const name = fetchURL.get();
+  const name = name.get();
   untrack(() => {
     thisFunctionReadOtherSignals(name);
   });
