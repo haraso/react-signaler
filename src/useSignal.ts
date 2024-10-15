@@ -5,7 +5,7 @@ import { Signal } from './types';
 export function useSignal() {
   const signalsRef = useRef<Record<string, Signal>>({});
   const signal = useCallback(
-    <T>(uniqueSignalKey: string, valueFactory: () => T) => {
+    <T>(uniqueSignalKey: string, valueFactory: () => T): Signal<T> => {
       if (signalsRef.current[uniqueSignalKey])
         return signalsRef.current[uniqueSignalKey];
 
